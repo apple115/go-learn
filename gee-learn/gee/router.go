@@ -43,7 +43,6 @@ func (r *router) addRoute(method string, pattern string, handler HandlerFunc) {
 
 // getRoute ...
 func (r *router) getRoute(method string, path string) (*node, map[string]string) {
-
 	searchParts := parsePattern(path)
 	params := make(map[string]string)
 	root, ok := r.roots[method]
@@ -79,5 +78,6 @@ func (r *router) handle(c *Context) {
 			c.String(http.StatusNotFound, "404 NOT FOUND: %s\n", c.Path)
 		})
 	}
+	//在这里执行
 	c.Next()
 }

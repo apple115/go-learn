@@ -18,6 +18,8 @@ type Context struct {
 	//middleware
 	handlers []HandlerFunc
 	index    int
+	//engine *Engine
+	engine   *Engine
 }
 
 func (c *Context) Fail(code int, err string) {
@@ -29,6 +31,16 @@ func (c *Context) Fail(code int, err string) {
 func (c *Context) Param(key string) string {
 	value := c.Params[key]
 	return value
+}
+
+// HTML ...
+func (c *Context) HTML(code int, name string, data interface{}) {
+	c.SetHeader("Context-Type", "text/html")
+	c.Status(code)
+	if err := c.engine.htmlTemplates.ExecuteTemplate(c.Writer, name, data); err != nil {
+		c.Fail(500, err.Error())
+	}
+
 }
 
 func newContext(w http.ResponseWriter, req *http.Request) *Context {
@@ -89,12 +101,4 @@ func (c *Context) JSON(code int, obj interface{}) {
 func (c *Context) Data(code int, data []byte) {
 	c.Status(code)
 	c.Writer.Write(data)
-}
-
-// HTML ...
-func (c *Context) HTML(code int, html string) {
-	c.SetHeader("Context-Type", "text/html")
-	c.Status(code)
-	c.Writer.Write([]byte(html))
-	// fmt.Fprintf(c.Writer, html)
 }
