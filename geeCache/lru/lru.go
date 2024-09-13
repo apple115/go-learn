@@ -1,5 +1,4 @@
-package geeCache
-
+package lru
 import "container/list"
 
 type Cache struct {
@@ -7,7 +6,7 @@ type Cache struct {
 	nbytes    int64
 	ll        *list.List
 	cache     map[string]*list.Element
-	OnEvicated func(key string, value Value)
+		OnEvicated func(key string, value Value)
 }
 
 type entry struct {
