@@ -3,7 +3,6 @@ package geecache
 type ByteView struct {
 	b []byte
 }
-
 // Len ...
 func (v ByteView) Len() int {
 	return len(v.b)
