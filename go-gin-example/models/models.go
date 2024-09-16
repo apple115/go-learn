@@ -2,7 +2,8 @@ package models
 
 import (
 	"fmt"
-	setting "go-gin-example/pkg"
+	_ "github.com/jinzhu/gorm/dialects/mysql" // mysql driver
+	"go-gin-example/pkg/setting"
 	"log"
 
 	"github.com/jinzhu/gorm"
