@@ -12,6 +12,12 @@ import (
 //                             |  否
 //                             |-----> 调用`回调函数`，获取值并添加到缓存 --> 返回缓存值 ⑶
 
+// (2)
+// 使用一致性哈希选择节点        是                                    是
+//    |-----> 是否是远程节点 -----> HTTP 客户端访问远程节点 --> 成功？-----> 服务端返回返回值
+//                    |  否                                    ↓  否
+//                    |----------------------------> 回退到本地节点处理。
+
 // Getter 用于从数据源获取数据 给用户自定义
 type Getter interface {
 	Get(key string) ([]byte, error)
@@ -28,6 +34,7 @@ type Group struct {
 	name      string
 	getter    Getter
 	mainCache cache
+	peers     PeerPicker
 }
 
 var (
@@ -72,9 +79,35 @@ func (g *Group) Get(key string) (ByteView, error) {
 	return g.load(key)
 }
 
+// RegisterPeers 注册节点选择器
+func (g *Group) RegisterPeers(peers PeerPicker) {
+	if g.peers != nil {
+		panic("RegisterPeerPicker called more than once")
+	}
+	g.peers = peers
+}
+
 // load ...
 func (g *Group) load(key string) (value ByteView, err error) {
+	if g.peers != nil {
+		if peer, ok := g.peers.PickPeer(key); ok {
+			if value, err = g.getFromPeer(peer, key); err == nil {
+				return value, nil
+			}
+			log.Println("[GeeCache] Failed to get from peer", err)
+		}
+	}
 	return g.getLocally(key)
+}
+
+// getFromPeer ...从远程节点通过key获取数据
+func (g *Group) getFromPeer(peer PeerGetter, key string) (ByteView, error) {
+	bytes, err := peer.Get(g.name, key)
+	if err != nil {
+		return ByteView{}, err
+	}
+
+	return ByteView{b: bytes}, nil
 }
 
 // getLocally ...
@@ -90,7 +123,7 @@ func (g *Group) getLocally(key string) (ByteView, error) {
 	return value, nil
 }
 
-// populateCache ...
+// populateCache  添加缓存
 func (g *Group) populateCache(key string, value ByteView) {
 	g.mainCache.add(key, value)
 }
