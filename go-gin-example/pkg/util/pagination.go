@@ -7,7 +7,7 @@ import (
 	"github.com/unknwon/com"
 )
 
-// GetPage ...
+// GetPage ... 分页
 func GetPage(c *gin.Context) int {
 	result := 0
 	page, _ := com.StrTo(c.Query("page")).Int()
