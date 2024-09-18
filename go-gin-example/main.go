@@ -10,7 +10,6 @@ import (
 	"os/signal"
 	"syscall"
 	"time"
-
 	"github.com/fvbock/endless"
 )
 
