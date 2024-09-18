@@ -24,7 +24,6 @@ func createGroup() *geecache.Group {
 			}
 			return nil, fmt.Errorf("%s not exist", key)
 		}))
-
 }
 
 // 启动缓存服务器

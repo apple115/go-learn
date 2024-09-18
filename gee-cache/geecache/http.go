@@ -3,7 +3,7 @@ package geecache
 import (
 	"fmt"
 	"geecache/consistenthash"
-	"io/ioutil"
+	"io"
 	"log"
 	"net/http"
 	"net/url"
@@ -24,7 +24,7 @@ type HTTPPool struct {
 	httpGetters map[string]*httpGetter
 }
 
-// NewHTTPPool ...
+// NewHTTPPool 缓存节点的HTTP池
 func NewHTTPPool(self string) *HTTPPool {
 	return &HTTPPool{
 		self:     self,
@@ -59,7 +59,7 @@ func (p *HTTPPool) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 	view, err := group.Get(key)
 	if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 	w.Header().Set("Content-Type", "application/octet-stream")
@@ -81,14 +81,14 @@ func (p *HTTPPool) Set(peers ...string) {
 }
 
 // PickPeer 根据具体的key选择节点
-func (p *HTTPPool) PickPeer(key string) (PeerGetter,bool) {
-		p.mu.Lock()
-		defer p.mu.Unlock()
-		if peer := p.peers.Get(key);peer!="" && peer != p.self {
-				p.Log("Pick peer %s", peer)
-				return p.httpGetters[peer],true
-		}
-		return nil,false
+func (p *HTTPPool) PickPeer(key string) (PeerGetter, bool) {
+	p.mu.Lock()
+	defer p.mu.Unlock()
+	if peer := p.peers.Get(key); peer != "" && peer != p.self {
+		p.Log("Pick peer %s", peer)
+		return p.httpGetters[peer], true
+	}
+	return nil, false
 }
 
 type httpGetter struct {
@@ -107,7 +107,7 @@ func (h *httpGetter) Get(group string, key string) ([]byte, error) {
 	if res.StatusCode != http.StatusOK {
 		return nil, fmt.Errorf("server returned:%v", res.Status)
 	}
-	bytes, err := ioutil.ReadAll(res.Body)
+	bytes, err := io.ReadAll(res.Body)
 	if err != nil {
 		return nil, fmt.Errorf("reading response body: %v", err)
 	}
